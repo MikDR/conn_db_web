@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Main Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+
+    <!-- Messaggio di benvenuto -->
+    <h1 class="text-2xl font-bold mb-6">Benvenuto {{ nome }}!</h1>
+
+    <form id="upload-form" class="w-full max-w-lg mt-6">
+        <!-- Dropzone -->
+        <div class="flex items-center justify-center w-full max-w-lg">
+            <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-white hover:bg-gray-50">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <svg class="w-8 h-8 mb-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 
+                                 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5
+                                 a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                    </svg>
+                    <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> o trascina qui il file</p>
+                    <p class="text-xs text-gray-500">CSV, XLS, XLSX</p>
+                </div>
+                <input id="dropzone-file" name="file" type="file" class="hidden" accept=".csv,.xls,.xlsx" onchange="previewFile(event)" required/>
+            </label>
+        </div>
+    
+        <!-- Anteprima file -->
+        <div id="file-preview" class="mt-4 text-sm text-gray-700 max-w-lg"></div>
+
+        <button type="submit" class="mt-4 px-4 py-2 bg-indigo-600 text-white font-semibold rounded hover:bg-indigo-500">
+            Conferma Upload
+        </button>
+    </form>
+
+    <script>
+    // --- funzione preview ---
+    function previewFile(event){
+        const file = event.target.files[0];
+        const preview = document.getElementById("file-preview");
+        preview.innerHTML = '';
+
+        if(file){
+            const fileName = document.createElement("p");
+            fileName.textContent = `File selezionato: ${file.name}`;
+            preview.appendChild(fileName);
+
+            const ext = file.name.split('.').pop().toLowerCase();
+            if(ext === 'csv'){
+                const reader = new FileReader();
+                reader.onload = function(e){
+                    const lines = e.target.result.split('\n').slice(0, 10);
+                    const pre = document.createElement("pre");
+                    pre.textContent = lines.join('\n');
+                    pre.style.maxHeight = "200px";
+                    pre.style.overflow = "auto";
+                    pre.style.backgroundColor = "#f9fafb";
+                    pre.style.padding = "8px";
+                    pre.style.borderRadius = "4px";
+                    preview.appendChild(pre);
+                };
+                reader.readAsText(file);
+            } else if(ext === 'xls' || ext === 'xlsx'){
+                preview.innerHTML += '<p>Anteprima non disponibile per Excel.</p>';
+            } else {
+                preview.innerHTML += '<p>Formato non supportato.</p>';
+            }
+        }
+    }
+
+    // --- submit con upload ---
+    document.getElementById("upload-form").addEventListener("submit", function(e){
+        e.preventDefault();
+
+        const fileInput = document.getElementById("dropzone-file");
+        if (!fileInput.files.length) {
+            alert("Seleziona un file prima di confermare!");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        fetch("/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);   // popup di successo
+            window.location.reload(); // ricarica la pagina e svuota l’anteprima
+        })
+        .catch(error => {
+            alert("Errore durante l'upload");
+            console.error(error);
+        });
+    });
+    </script>
+
+</body>
+</html>
