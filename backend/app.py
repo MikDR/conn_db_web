@@ -4,6 +4,7 @@ import bcrypt
 import os
 import pandas as pd
 import mysql.connector
+import shutil
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -80,6 +81,8 @@ def upload_file():
 
     save_path = os.path.join(app.config['UPLOAD_FOLDER'], "dati_combinati.csv")
     save_new_path = os.path.join(app.config['UPLOAD_FOLDER'], "new_dati.csv")
+    shutil.copyfile('backend/uploads/dati_combinati.csv', 'backend/uploads/dati_combinati_backup.csv')
+    shutil.copyfile('backend/uploads/new_dati.csv', 'backend/uploads/new_dati_backup.csv')
 
     # Se il file finale NON esiste o è vuoto → scriviamo tutto (compreso header)
     if not os.path.exists(save_path) or os.path.getsize(save_path) == 0:
@@ -98,7 +101,14 @@ def upload_file():
         df.to_csv(save_path, index=False, mode="a", header=False)
 
         df.to_csv(save_new_path, index=False, mode="w", header=True)
-    upload_to_db(save_new_path)
+
+    try:
+        upload_to_db(save_new_path)
+    except Exception as err:
+        # FAccio la rollback
+        shutil.copyfile('backend/uploads/dati_combinati_backup.csv', 'backend/uploads/dati_combinati.csv')
+        shutil.copyfile('backend/uploads/new_dati_backup.csv', 'backend/uploads/new_dati.csv')
+        return jsonify({"message": f"Errore nell'inserimento: {err}."})
 
     return jsonify({"message": f"File {file.filename} aggiunto con successo alla collezione."})
 
