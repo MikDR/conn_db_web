@@ -47,7 +47,7 @@ def upload_to_db(path_file):
 def home():
     return render_template("login.html")
 
-@app.route("/main_page", methods=["POST"])
+@app.route("/login", methods=["POST"])
 def login():
     username = request.form.get("username")
     password = request.form.get("password")
@@ -105,7 +105,7 @@ def upload_file():
     try:
         upload_to_db(save_new_path)
     except Exception as err:
-        # FAccio la rollback
+        # Faccio la rollback
         shutil.copyfile('backend/uploads/dati_combinati_backup.csv', 'backend/uploads/dati_combinati.csv')
         shutil.copyfile('backend/uploads/new_dati_backup.csv', 'backend/uploads/new_dati.csv')
         return jsonify({"message": f"Errore nell'inserimento: {err}."})
