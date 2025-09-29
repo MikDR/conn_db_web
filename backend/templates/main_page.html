@@ -89,7 +89,8 @@
         .then(response => response.json())
         .then(data => {
             alert(data.message);   // popup di successo
-            window.location.reload(); // ricarica la pagina e svuota l’anteprima
+            document.getElementById("upload-form").reset();   // resetta il form
+            document.getElementById("file-preview").innerHTML = "";  // pulisce anteprima
         })
         .catch(error => {
             alert("Errore durante l'upload");
