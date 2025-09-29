@@ -1,2 +1,4 @@
 .venv/
 backend/uploads/
+backend/uploads/dati_combinati.csv
+backend/uploads/new_dati.csv
