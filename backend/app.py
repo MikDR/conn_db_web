@@ -112,5 +112,24 @@ def upload_file():
 
     return jsonify({"message": f"File {file.filename} aggiunto con successo alla collezione."})
 
+@app.route("/mgmt_page")
+def mgmt_page():
+    #Leggi il CSV con pandas
+    df = pd.read_csv("/home/michele/Desktop/conn_db_web/test.csv")
+
+    #Converti in lista di dizionari (compatibile con Jinja2)
+    rows = df.to_dict(orient="records")
+
+    return render_template("mgmt_page.html", rows=rows)
+
+@app.route("/remove", methods = ["POST"])
+def remove_from_sql():
+    ip = request.form.get("Ip")
+    df = pd.read_csv("/home/michele/Desktop/conn_db_web/test.csv")
+    df = df[df["Ip"] != ip]      # filtro via la riga
+    df.to_csv("/home/michele/Desktop/conn_db_web/test.csv", index=False)         # riscrivo il CSV
+    
+    return redirect(url_for("mgmt_page"))
+
 if __name__ == "__main__":
     app.run(debug=True)
